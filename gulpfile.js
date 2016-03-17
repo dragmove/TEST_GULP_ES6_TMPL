@@ -32,14 +32,6 @@ gulp.task('connect', function() {
 	});
 });
 
-gulp.task('es2015', function() {
-	gulp.src('js/src/es2015/*.js')
-		.pipe( plugins.babel({
-			presets: ['es2015']
-		}) )
-		.pipe( gulp.dest('js/src') );
-});
-
 gulp.task('lint', function() {
 	return gulp.src('js/src/*.js')
 		.pipe(plugins.jshint())
@@ -47,8 +39,19 @@ gulp.task('lint', function() {
 });
 
 gulp.task('concat', function() {
-	return gulp.src(['js/src/util.js', 'js/src/object.js'])
+	return gulp.src(['js/lib/doT.js', 'js/template/sample.tmpl.js', 'js/template/test.tmpl.js','js/src/util.js', 'js/src/object.js'])
 		.pipe(plugins.concat('BUILD_FILE_NAME.js'))
+
+		// transcompile es2015 by babel
+		.pipe( plugins.babel({
+			presets: ['es2015']
+		}) )
+		.pipe(plugins.insert.transform(function(contents, file) {
+			var prefix = '(function(){\n',
+				suffix = '\n}());';
+			return prefix + contents + suffix;
+		}))
+
 		.pipe( plugins.header(banner, {pkg: pkg}) )
 		.pipe(gulp.dest('build'));
 });
@@ -64,7 +67,7 @@ gulp.task('custom-backup', function() {
 });
 
 gulp.task('uglify', function() {
-	return gulp.src('build/*')
+	return gulp.src('build/BUILD_FILE_NAME.js')
 		.pipe(plugins.rename({suffix: '.min'}))
 		.pipe(plugins.uglify())
 		.pipe( plugins.header(banner, {pkg: pkg}) )
@@ -97,4 +100,4 @@ gulp.task('watch', function() {
 	gulp.watch(['js/src/*.js'], ['lint']);
 });
 
-gulp.task('build', plugins.sequence('lint', 'concat', 'custom-backup', 'uglify') );
+gulp.task('build', plugins.sequence('tmpl', 'lint', 'concat', 'custom-backup', 'uglify') );

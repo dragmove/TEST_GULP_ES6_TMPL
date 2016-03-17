@@ -3,7 +3,176 @@
  * @version : v0.0.0
  * @author : 
  */
+(function(){
 'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _templateObject = _taggedTemplateLiteral(['Hello ', ' world ', ''], ['Hello ', ' world ', '']);
+
+function _taggedTemplateLiteral(strings, raw) { return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+// doT.js
+// 2011, Laura Doktorova, https://github.com/olado/doT
+// Licensed under the MIT license.
+
+(function () {
+	"use strict";
+
+	var doT = {
+		version: '1.0.1',
+		templateSettings: {
+			evaluate: /\{\{([\s\S]+?(\}?)+)\}\}/g,
+			interpolate: /\{\{=([\s\S]+?)\}\}/g,
+			encode: /\{\{!([\s\S]+?)\}\}/g,
+			use: /\{\{#([\s\S]+?)\}\}/g,
+			useParams: /(^|[^\w$])def(?:\.|\[[\'\"])([\w$\.]+)(?:[\'\"]\])?\s*\:\s*([\w$\.]+|\"[^\"]+\"|\'[^\']+\'|\{[^\}]+\})/g,
+			define: /\{\{##\s*([\w\.$]+)\s*(\:|=)([\s\S]+?)#\}\}/g,
+			defineParams: /^\s*([\w$]+):([\s\S]+)/,
+			conditional: /\{\{\?(\?)?\s*([\s\S]*?)\s*\}\}/g,
+			iterate: /\{\{~\s*(?:\}\}|([\s\S]+?)\s*\:\s*([\w$]+)\s*(?:\:\s*([\w$]+))?\s*\}\})/g,
+			varname: 'it',
+			strip: true,
+			append: true,
+			selfcontained: false
+		},
+		template: undefined, //fn, compile template
+		compile: undefined //fn, for express
+	},
+	    global;
+
+	if (typeof module !== 'undefined' && module.exports) {
+		module.exports = doT;
+	} else if (typeof define === 'function' && define.amd) {
+		define(function () {
+			return doT;
+		});
+	} else {
+		global = function () {
+			return this || (0, eval)('this');
+		}();
+		global.doT = doT;
+	}
+
+	function encodeHTMLSource() {
+		var encodeHTMLRules = { "&": "&#38;", "<": "&#60;", ">": "&#62;", '"': '&#34;', "'": '&#39;', "/": '&#47;' },
+		    matchHTML = /&(?!#?\w+;)|<|>|"|'|\//g;
+		return function () {
+			return this ? this.replace(matchHTML, function (m) {
+				return encodeHTMLRules[m] || m;
+			}) : this;
+		};
+	}
+	String.prototype.encodeHTML = encodeHTMLSource();
+
+	var startend = {
+		append: { start: "'+(", end: ")+'", endencode: "||'').toString().encodeHTML()+'" },
+		split: { start: "';out+=(", end: ");out+='", endencode: "||'').toString().encodeHTML();out+='" }
+	},
+	    skip = /$^/;
+
+	function resolveDefs(c, block, def) {
+		return (typeof block === 'string' ? block : block.toString()).replace(c.define || skip, function (m, code, assign, value) {
+			if (code.indexOf('def.') === 0) {
+				code = code.substring(4);
+			}
+			if (!(code in def)) {
+				if (assign === ':') {
+					if (c.defineParams) value.replace(c.defineParams, function (m, param, v) {
+						def[code] = { arg: param, text: v };
+					});
+					if (!(code in def)) def[code] = value;
+				} else {
+					new Function("def", "def['" + code + "']=" + value)(def);
+				}
+			}
+			return '';
+		}).replace(c.use || skip, function (m, code) {
+			if (c.useParams) code = code.replace(c.useParams, function (m, s, d, param) {
+				if (def[d] && def[d].arg && param) {
+					var rw = (d + ":" + param).replace(/'|\\/g, '_');
+					def.__exp = def.__exp || {};
+					def.__exp[rw] = def[d].text.replace(new RegExp("(^|[^\\w$])" + def[d].arg + "([^\\w$])", "g"), "$1" + param + "$2");
+					return s + "def.__exp['" + rw + "']";
+				}
+			});
+			var v = new Function("def", "return " + code)(def);
+			return v ? resolveDefs(c, v, def) : v;
+		});
+	}
+
+	function unescape(code) {
+		return code.replace(/\\('|\\)/g, "$1").replace(/[\r\t\n]/g, ' ');
+	}
+
+	doT.template = function (tmpl, c, def) {
+		c = c || doT.templateSettings;
+		var cse = c.append ? startend.append : startend.split,
+		    needhtmlencode,
+		    sid = 0,
+		    indv,
+		    str = c.use || c.define ? resolveDefs(c, tmpl, def || {}) : tmpl;
+
+		str = ("var out='" + (c.strip ? str.replace(/(^|\r|\n)\t* +| +\t*(\r|\n|$)/g, ' ').replace(/\r|\n|\t|\/\*[\s\S]*?\*\//g, '') : str).replace(/'|\\/g, '\\$&').replace(c.interpolate || skip, function (m, code) {
+			return cse.start + unescape(code) + cse.end;
+		}).replace(c.encode || skip, function (m, code) {
+			needhtmlencode = true;
+			return cse.start + unescape(code) + cse.endencode;
+		}).replace(c.conditional || skip, function (m, elsecase, code) {
+			return elsecase ? code ? "';}else if(" + unescape(code) + "){out+='" : "';}else{out+='" : code ? "';if(" + unescape(code) + "){out+='" : "';}out+='";
+		}).replace(c.iterate || skip, function (m, iterate, vname, iname) {
+			if (!iterate) return "';} } out+='";
+			sid += 1;indv = iname || "i" + sid;iterate = unescape(iterate);
+			return "';var arr" + sid + "=" + iterate + ";if(arr" + sid + "){var " + vname + "," + indv + "=-1,l" + sid + "=arr" + sid + ".length-1;while(" + indv + "<l" + sid + "){" + vname + "=arr" + sid + "[" + indv + "+=1];out+='";
+		}).replace(c.evaluate || skip, function (m, code) {
+			return "';" + unescape(code) + "out+='";
+		}) + "';return out;").replace(/\n/g, '\\n').replace(/\t/g, '\\t').replace(/\r/g, '\\r').replace(/(\s|;|\}|^|\{)out\+='';/g, '$1').replace(/\+''/g, '').replace(/(\s|;|\}|^|\{)out\+=''\+/g, '$1out+=');
+
+		if (needhtmlencode && c.selfcontained) {
+			str = "String.prototype.encodeHTML=(" + encodeHTMLSource.toString() + "());" + str;
+		}
+		try {
+			return new Function(c.varname, str);
+		} catch (e) {
+			if (typeof console !== 'undefined') console.log("Could not create a template function: " + str);
+			throw e;
+		}
+	};
+
+	doT.compile = function (tmpl, def) {
+		return doT.template(tmpl, null, def);
+	};
+})();
+
+(function () {
+	if (!window.nc) window.nc = {};
+	if (!nc.PROJECT_NAME) nc.PROJECT_NAME = {};
+	if (!nc.PROJECT_NAME.tmpl) nc.PROJECT_NAME.tmpl = {};
+
+	var tmpl = '' + '{{{title}}}' + '' + '<div class="title">' + '' + '<div>+ This is sample.tpl.html title</div>' + '' + '</div>' + '' + '' + '' + '{{{info}}}' + '' + '<section class="info">' + '' + '{{? it.name === \'Kim\'}}' + '' + '<div>{{=it.name}}</div>' + '' + '{{?? it.company}}' + '' + '<div>{{=it.company}}</div>' + '' + '{{??}}' + '' + '<div>no name</div>' + '' + '{{?}}' + '' + '</section>' + '' + '' + '' + '{{{loadingBar}}}' + '' + '<div class="loadingbar">loading</div>';
+
+	nc.PROJECT_NAME.tmpl["sample"] = tmpl;
+})();
+
+(function () {
+	if (!window.nc) window.nc = {};
+	if (!nc.PROJECT_NAME) nc.PROJECT_NAME = {};
+	if (!nc.PROJECT_NAME.tmpl) nc.PROJECT_NAME.tmpl = {};
+
+	var tmpl = '' + '<div class="wrapArticle">' + '' + '<div>+ This is test.tpl.html title</div>' + '' + '</div>';
+
+	nc.PROJECT_NAME.tmpl["test"] = tmpl;
+})();
 
 if (!window.nc) window.nc = {};
 if (!nc.PROJECT_NAME) nc.PROJECT_NAME = {};
@@ -53,40 +222,19 @@ if (!nc.PROJECT_NAME) nc.PROJECT_NAME = {};
 	nc.PROJECT_NAME.util.getParseTmplObj = getParseTmplObj;
 	nc.PROJECT_NAME.util.parseStrPropertiesToInt = parseStrPropertiesToInt;
 })(jQuery);
-'use strict';
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
-var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _templateObject = _taggedTemplateLiteral(['Hello ', ' world ', ''], ['Hello ', ' world ', '']);
-
-var _math = require('./lib/math');
-
-var math = _interopRequireWildcard(_math);
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _taggedTemplateLiteral(strings, raw) { return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
+/*
 var utils = require('./utils');
 console.log('utils.multi(10, 10) :', utils.multi(10, 10));
+*/
 
 /*
  * import
  */
-
-console.log('import :', math.sum(math.pi, math.pi));
+/*
+import * as math from './lib/math';
+console.log('import :', math.sum(math.pi, math.pi) );
+*/
 
 /*
  * block scope
@@ -363,6 +511,24 @@ console.log('Hello,\nboy?');
 		}
 
 		// make iterator
+		/*
+  let fibonacci = {
+  	[Symbol.iterator]() {
+  		let pre = 0, cur = 1;
+  		return {
+  			next() {
+  				[pre, cur] = [cur, pre + cur];
+  				return { done: false, value: cur };
+  			}
+  		}
+  	}
+  };
+  
+  for(var n of fibonacci) {
+  	if(n > 1000) break;
+  	console.log(n);
+  }
+  */
 	} catch (err) {
 		_didIteratorError4 = true;
 		_iteratorError4 = err;
@@ -377,109 +543,33 @@ console.log('Hello,\nboy?');
 			}
 		}
 	}
-
-	var _fibonacci = _defineProperty({}, Symbol.iterator, function () {
-		var pre = 0,
-		    cur = 1;
-		return {
-			next: function next() {
-				var _ref = [cur, pre + cur];
-				pre = _ref[0];
-				cur = _ref[1];
-
-				return { done: false, value: cur };
-			}
-		};
-	});
-
-	var _iteratorNormalCompletion5 = true;
-	var _didIteratorError5 = false;
-	var _iteratorError5 = undefined;
-
-	try {
-		for (var _iterator5 = _fibonacci[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-			var n = _step5.value;
-
-			if (n > 1000) break;
-			console.log(n);
-		}
-	} catch (err) {
-		_didIteratorError5 = true;
-		_iteratorError5 = err;
-	} finally {
-		try {
-			if (!_iteratorNormalCompletion5 && _iterator5.return) {
-				_iterator5.return();
-			}
-		} finally {
-			if (_didIteratorError5) {
-				throw _iteratorError5;
-			}
-		}
-	}
 }
 
 /*
  * Generators
  */
-var fibonacci = _defineProperty({}, Symbol.iterator, regeneratorRuntime.mark(function _callee() {
-	var pre, cur, temp;
-	return regeneratorRuntime.wrap(function _callee$(_context) {
-		while (1) {
-			switch (_context.prev = _context.next) {
-				case 0:
-					pre = 0, cur = 1;
-
-				case 1:
-					temp = pre;
-
-					pre = cur;
-					cur += temp;
-					_context.next = 6;
-					return cur;
-
-				case 6:
-					_context.next = 1;
-					break;
-
-				case 8:
-				case 'end':
-					return _context.stop();
-			}
-		}
-	}, _callee, this);
-}));
-
-var _iteratorNormalCompletion6 = true;
-var _didIteratorError6 = false;
-var _iteratorError6 = undefined;
-
-try {
-	for (var _iterator6 = fibonacci[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-		var n = _step6.value;
-
-		if (n > 1000) break;
-		console.log(n);
-	}
-
-	/*
-  * Symbols
-  */
-} catch (err) {
-	_didIteratorError6 = true;
-	_iteratorError6 = err;
-} finally {
-	try {
-		if (!_iteratorNormalCompletion6 && _iterator6.return) {
-			_iterator6.return();
-		}
-	} finally {
-		if (_didIteratorError6) {
-			throw _iteratorError6;
+/*
+var fibonacci = {
+	[Symbol.iterator]: function*() {
+		var pre = 0, cur = 1;
+		for(;;) {
+			var temp = pre;
+			pre = cur;
+			cur += temp;
+			yield cur;
 		}
 	}
 }
 
+for(var n of fibonacci) {
+	if(n > 1000) break;
+	console.log(n);
+}
+*/
+
+/*
+ * Symbols
+ */
 (function () {
 	var key = Symbol('key');
 
@@ -518,8 +608,10 @@ console.log([1, 2, 3].findIndex(function (x) {
 var keys = ['a', 'b', 'c'].keys();
 console.log('keys.next() :', keys.next());
 
+/*
 var vals = ['a', 'b', 'c'].values();
-console.log('vals.next() :', vals.next());
+console.log( 'vals.next() :', vals.next() );
+*/
 
 /*
  * Object.assign
@@ -567,3 +659,4 @@ console.log(name);
 
 Reflect.set(obj, 'name', 'mario');
 console.log(obj.name);
+}());
