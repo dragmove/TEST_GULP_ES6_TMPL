@@ -46,6 +46,7 @@ describe('JASMINE UNIT TEST', function() {
 		expect(msg).toMatch(/bar/);
 	});
 
+	/*
 	// test function in other js file 
 	describe('td.testFunc', function() {
 		it('return true', function() {
@@ -154,4 +155,5 @@ describe('JASMINE UNIT TEST', function() {
 			expect(child.getLastName()).toBe('kim');
 		});
 	});
+	*/
 });
