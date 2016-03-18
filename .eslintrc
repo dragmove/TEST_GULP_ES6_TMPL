@@ -1,0 +1,42 @@
+{
+    "env": {
+        "browser": true,
+        "es6": true,
+        "jasmine": true,
+        "jquery": true,
+
+    },
+
+    "parser": "esprima",
+
+    "parserOptions": {
+        "ecmaVersion": 6,
+        "sourceType": "script",
+        "ecmaFeatures": {
+            "impliedStrict": true,
+            "jsx": true
+        },
+    },
+
+    "globals": {
+      "window": true
+    },
+
+    "extends": "eslint:recommended",
+
+    "rules": {
+        "comma-dangle": ["error", "never"],
+
+        "no-console": ["off"],
+
+        "no-undef": ["off", {"typeof": true}],
+
+        "no-redeclare": ["error"],
+
+        "no-mixed-spaces-and-tabs": ["off", "smart-tabs"],
+
+        "no-unused-vars": ["error", { "vars": "all", "args": "none" }],
+
+        "quotes": ["off", "double"]
+    }
+}
