@@ -16,19 +16,7 @@ var pkg = require('./package.json'),
 	// babel = require('gulp-babel'),
 	dateFormat = require('dateformat'),
 	path = require('path'),
-
 	Server = require('karma').Server;
-
-/*
- * use karma
- */
-gulp.task('karma', function(done) {
-	new Server({
-		configFile: __dirname + '/js/tests/karma.conf.js'
-		// singleRun: true
-	}, done).start();
-});
-
 
 var banner = ['/**', 
 	' * @name : <%= pkg.name %>',
@@ -115,3 +103,12 @@ gulp.task('watch', function() {
 
 gulp.task('build', plugins.sequence('tmpl', 'lint', 'concat', 'custom-backup', 'uglify') );
 
+/*
+ * use karma
+ */
+gulp.task('karma', function(done) {
+	new Server({
+		configFile: __dirname + '/js/tests/karma.conf.js'
+		// singleRun: true
+	}, done).start();
+});
