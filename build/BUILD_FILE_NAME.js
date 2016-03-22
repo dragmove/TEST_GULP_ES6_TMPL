@@ -222,7 +222,6 @@ if (!nc.PROJECT_NAME) nc.PROJECT_NAME = {};
 	nc.PROJECT_NAME.util.getParseTmplObj = getParseTmplObj;
 	nc.PROJECT_NAME.util.parseStrPropertiesToInt = parseStrPropertiesToInt;
 })(jQuery);
-
 /*
 var utils = require('./utils');
 console.log('utils.multi(10, 10) :', utils.multi(10, 10));

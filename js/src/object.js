@@ -1,4 +1,3 @@
-
 /*
 var utils = require('./utils');
 console.log('utils.multi(10, 10) :', utils.multi(10, 10));
@@ -11,6 +10,7 @@ console.log('utils.multi(10, 10) :', utils.multi(10, 10));
 import * as math from './lib/math';
 console.log('import :', math.sum(math.pi, math.pi) );
 */
+
 
 
 /*

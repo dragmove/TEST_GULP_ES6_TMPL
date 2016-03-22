@@ -14,6 +14,7 @@ var pkg = require('./package.json'),
 	// tmpl2js = require('gulp-tmpl2js'),
 	// insert = require('gulp-insert'),
 	// babel = require('gulp-babel'),
+	livereload = require('gulp-livereload'),
 	dateFormat = require('dateformat'),
 	path = require('path'),
 	Server = require('karma').Server;
@@ -28,8 +29,8 @@ var banner = ['/**',
 gulp.task('connect', function() {
 	plugins.connect.server({
 		root: './',
-		port: 8080,
-		livereload: false
+		port: 8080
+		//livereload: true
 	});
 });
 
@@ -54,7 +55,8 @@ gulp.task('concat', function() {
 		}))
 
 		.pipe( plugins.header(banner, {pkg: pkg}) )
-		.pipe(gulp.dest('build'));
+		.pipe( gulp.dest('build') )
+		.pipe( plugins.livereload() );
 });
 
 gulp.task('custom-backup', function() {
@@ -95,10 +97,23 @@ gulp.task('tmpl', function() {
 });
 
 /*
+ * livereload
+ */
+gulp.task('reload', function() {
+	console.log('reload');
+	gulp.src('css/**/*.css').pipe( plugins.livereload() );
+	// gulp.src('build/**/*.js').pipe( plugins.livereload() );
+});
+
+/*
  * use tasks
  */
 gulp.task('watch', function() {
-	gulp.watch(['js/src/*.js'], ['lint']);
+	// set livereload
+	plugins.livereload.listen();
+
+	gulp.watch(['js/src/*.js'], ['concat']);
+	gulp.watch(['css/**/*.css'], ['reload']);
 });
 
 gulp.task('build', plugins.sequence('tmpl', 'lint', 'concat', 'custom-backup', 'uglify') );
