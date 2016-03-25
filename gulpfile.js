@@ -1,4 +1,6 @@
 var pkg = require('./package.json'),
+	path = require('path'),
+	dateFormat = require('dateformat'),
 	gulp = require('gulp'),
 	plugins = require('gulp-load-plugins')({
 		pattern: ['gulp-*', 'gulp.*'],
@@ -14,9 +16,7 @@ var pkg = require('./package.json'),
 	// tmpl2js = require('gulp-tmpl2js'),
 	// insert = require('gulp-insert'),
 	// babel = require('gulp-babel'),
-	livereload = require('gulp-livereload'),
-	dateFormat = require('dateformat'),
-	path = require('path'),
+	// livereload = require('gulp-livereload'),
 	Server = require('karma').Server;
 
 var banner = ['/**', 
@@ -53,7 +53,6 @@ gulp.task('concat', function() {
 				suffix = '\n}());';
 			return prefix + contents + suffix;
 		}))
-
 		.pipe( plugins.header(banner, {pkg: pkg}) )
 		.pipe( gulp.dest('build') )
 		.pipe( plugins.livereload() );
